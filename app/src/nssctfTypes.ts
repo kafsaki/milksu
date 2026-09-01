@@ -1,3 +1,5 @@
+import { t } from '@/lib/uiLocale'
+
 export interface NSSCTFChallenge {
   platform: 'NSSCTF'
   platformId: number
@@ -50,7 +52,10 @@ export function normalizeNSSCTFProblemURL(raw: string) {
   try {
     parsed = new URL(input)
   } catch {
-    throw new Error('请输入题目 ID，或 https://www.nssctf.cn/problem/{id} 形式的链接')
+    throw new Error(t(
+      '请输入题目 ID，或 https://www.nssctf.cn/problem/{id} 形式的链接',
+      'Enter a challenge ID or a link in the form https://www.nssctf.cn/problem/{id}',
+    ))
   }
   const match = /^\/problem\/([1-9][0-9]*)\/?$/.exec(parsed.pathname)
   if (
@@ -63,7 +68,10 @@ export function normalizeNSSCTFProblemURL(raw: string) {
     || parsed.hash
     || !match
   ) {
-    throw new Error('请输入题目 ID，或 https://www.nssctf.cn/problem/{id} 形式的链接')
+    throw new Error(t(
+      '请输入题目 ID，或 https://www.nssctf.cn/problem/{id} 形式的链接',
+      'Enter a challenge ID or a link in the form https://www.nssctf.cn/problem/{id}',
+    ))
   }
   const id = Number(match[1])
   return { id, url: `https://www.nssctf.cn/problem/${id}` }
@@ -71,12 +79,15 @@ export function normalizeNSSCTFProblemURL(raw: string) {
 
 export function challengeFromNSSCTFAPI(payload: NSSCTFAPIResponse, requestedId: number): NSSCTFChallenge {
   if (payload.code !== 200 || payload.data.pid !== requestedId || !payload.data.title.trim()) {
-    throw new Error('NSSCTF 没有返回有效题目')
+    throw new Error(t('NSSCTF 没有返回有效题目', 'NSSCTF did not return a valid challenge'))
   }
   const parser = new DOMParser()
   const documentValue = parser.parseFromString(payload.data.desc || '', 'text/html')
   const statement = documentValue.body.textContent?.replace(/\n{3,}/g, '\n\n').trim()
-    || 'NSSCTF 公开题面未提供文字描述；请在平台查看环境、附件与题目要求。'
+    || t(
+      'NSSCTF 公开题面未提供文字描述；请在平台查看环境、附件与题目要求。',
+      'NSSCTF did not provide a public description; check the platform for the environment, attachments, and requirements.',
+    )
   const tags = [...new Set(payload.data.tag.map(item => item[0].trim()).filter(Boolean))].slice(0, 8)
   return {
     platform: 'NSSCTF',
